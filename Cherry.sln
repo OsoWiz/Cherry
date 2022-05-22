@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32002.261
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Cherry", "Cherry.vcxproj", "{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}.Debug|x64.ActiveCfg = Debug|x64
+		{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}.Debug|x64.Build.0 = Debug|x64
+		{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}.Debug|x86.ActiveCfg = Debug|Win32
+		{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}.Debug|x86.Build.0 = Debug|Win32
+		{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}.Release|x64.ActiveCfg = Release|x64
+		{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}.Release|x64.Build.0 = Release|x64
+		{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}.Release|x86.ActiveCfg = Release|Win32
+		{C30B9B7F-767D-4087-9A4A-BC807ADA13FC}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3B5F2791-CE12-403D-A4B5-66616597EBF2}
+	EndGlobalSection
+EndGlobal
