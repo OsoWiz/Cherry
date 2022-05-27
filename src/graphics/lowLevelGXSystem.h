@@ -1,10 +1,9 @@
 #pragma once
 
 //Defines
-#define _GLFW_WIN32
 #define GLFW_INCLUDE_VULKAN
 //Includes
-#include <glfw-3.3.7/include/GLFW/glfw3.h>
+#include <GLFW/glfw3.h>
 
 #include <fstream>
 #include <iostream>

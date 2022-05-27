@@ -1,5 +1,7 @@
 #pragma once
 
+//includes
+#include "../graphics/graphicsManager.h"
 
 
 namespace cherry {
@@ -13,7 +15,7 @@ namespace cherry {
 
 
 	private:
-
+		GXSystem graphicsSystem;
 
 
 	};

@@ -7,7 +7,7 @@ namespace cherry{
 	/// Initializes the engine systems.
 	/// </summary>
 	void Engine::initialize() {
-
+		this->graphicsSystem.run();
 
 
 	}
