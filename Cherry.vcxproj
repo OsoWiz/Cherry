@@ -20,13 +20,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\core\engine.cpp" />
-    <ClCompile Include="src\graphics\lowLevelGXSystem.h.cpp" />
+    <ClCompile Include="src\graphics\graphicsBuffers.cpp" />
+    <ClCompile Include="src\graphics\lowLevelGXSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="dependencies\glfw\include\GLFW\glfw3.h" />
     <ClInclude Include="dependencies\glfw\include\GLFW\glfw3native.h" />
     <ClInclude Include="include\cherry.h" />
     <ClInclude Include="src\core\engine.h" />
+    <ClInclude Include="src\graphics\graphicsBuffers.h" />
     <ClInclude Include="src\graphics\graphicsManager.h" />
     <ClInclude Include="src\graphics\lowLevelGXSystem.h" />
     <ClInclude Include="src\graphics\UISystem.h" />
@@ -154,6 +156,8 @@
     <None Include="dependencies\glfw\docs\html\vulkan_guide.html" />
     <None Include="dependencies\glfw\docs\html\window_8dox.html" />
     <None Include="dependencies\glfw\docs\html\window_guide.html" />
+    <None Include="src\graphics\shaders\frag.spv" />
+    <None Include="src\graphics\shaders\vert.spv" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -251,9 +255,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_GLFW_WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_GLFW_WIN32;_GLFW_BUILD_DLL;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\glfw\include\;C:\VulkanSDK\1.2.162.1\include;D:\Ozo\repos\Cherry\dependencies;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.1\include;D:\Ozo\repos\Cherry\dependencies;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -261,7 +265,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.162.1\Lib;$(SolutionDir)dependencies\glfw\lib-vc2019;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Ozo\repos\glfw\src\Release;C:\VulkanSDK\1.2.162.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;</AdditionalDependencies>
     </Lib>
     <ProjectReference>
@@ -274,9 +278,9 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_GLFW_WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_GLFW_WIN32;_GLFW_BUILD_DLL;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)dependencies\glfw\include\;C:\VulkanSDK\1.2.162.1\include;D:\Ozo\repos\Cherry\dependencies;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\VulkanSDK\1.2.162.1\include;D:\Ozo\repos\Cherry\dependencies;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
@@ -286,7 +290,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.162.1\Lib;$(SolutionDir)dependencies\glfw\lib-vc2019;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>D:\Ozo\repos\glfw\src\Release;C:\VulkanSDK\1.2.162.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;</AdditionalDependencies>
     </Lib>
     <ProjectReference>
@@ -294,6 +298,5 @@
     </ProjectReference>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
-  <ImportGroup Label="ExtensionTargets">
-  </ImportGroup>
+  <ImportGroup Label="ExtensionTargets" />
 </Project>

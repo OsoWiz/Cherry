@@ -69,7 +69,7 @@ void GXSystem::pickPhysicalDevice()
     }
 
     std::vector<VkPhysicalDevice> devices(devcount);
-    vkEnumeratePhysicalDevices(this->instance, &devcount, devices.data()); //We have to do this twice, as it is how this function works. If the pointer is not null, it will try to fill out devcount devices.
+    vkEnumeratePhysicalDevices(this->instance, &devcount, devices.data()); //We have to do this twice, as it is how vulkan works
 
     for (const auto& device : devices) {
         if (isDeviceSuitable(device)) {
@@ -275,8 +275,8 @@ void GXSystem::createRenderPass()
 
 void GXSystem::createGraphicsPipeline()
 {
-    auto vertCode = readFile("Shaders/vert.spv");
-    auto fragCode = readFile("Shaders/frag.spv");
+    auto vertCode = readFile("/shaders/vert.spv");
+    auto fragCode = readFile("/shaders/frag.spv");
 
     VkShaderModule vertModule = createShaderModule(vertCode);
     VkShaderModule fragModule = createShaderModule(fragCode);
@@ -589,7 +589,9 @@ void GXSystem::mainLoop() {
 
 std::vector<char> GXSystem::readFile(const std::string& filename)
 {
-    std::ifstream filu(filename, std::ios::ate | std::ios::binary);
+    std::cout<< std::filesystem::current_path().string() << filename << std::endl;
+    std::string filename2 = std::filesystem::current_path().string()+filename;
+    std::ifstream filu(filename2, std::ios::ate | std::ios::binary);
 
     if (!filu.is_open()) {
         throw std::runtime_error("Opening a file failed");

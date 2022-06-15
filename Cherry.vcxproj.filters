@@ -18,7 +18,10 @@
     <ClCompile Include="src\core\engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\graphics\lowLevelGXSystem.h.cpp">
+    <ClCompile Include="src\graphics\lowLevelGXSystem.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\graphics\graphicsBuffers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -42,6 +45,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="dependencies\glfw\include\GLFW\glfw3native.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\graphics\graphicsBuffers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -168,5 +174,7 @@
     <None Include="dependencies\glfw\docs\html\vulkan_guide.html" />
     <None Include="dependencies\glfw\docs\html\window_8dox.html" />
     <None Include="dependencies\glfw\docs\html\window_guide.html" />
+    <None Include="src\graphics\shaders\vert.spv" />
+    <None Include="src\graphics\shaders\frag.spv" />
   </ItemGroup>
 </Project>
