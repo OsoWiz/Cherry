@@ -275,8 +275,8 @@ void GXSystem::createRenderPass()
 
 void GXSystem::createGraphicsPipeline()
 {
-    auto vertCode = readFile("/shaders/vert.spv");
-    auto fragCode = readFile("/shaders/frag.spv");
+    auto vertCode = readFile("/shaders/vert.spv"); // TODO ask filereader
+    auto fragCode = readFile("/shaders/frag.spv"); // TODO ask filereader
 
     VkShaderModule vertModule = createShaderModule(vertCode);
     VkShaderModule fragModule = createShaderModule(fragCode);
@@ -781,6 +781,23 @@ int GXSystem::rateDevice(VkPhysicalDevice device)
 
 
     return 1;
+}
+
+uint32_t GXSystem::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+    VkPhysicalDeviceMemoryProperties gpuMemProp;
+    vkGetPhysicalDeviceMemoryProperties(gpu, &gpuMemProp); // evaluates the props
+
+    for (uint32_t i = 0u; i < gpuMemProp.memoryTypeCount; i++) {
+        if (typeFilter & (i << i)
+            && (gpuMemProp.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error("No memory type found suitable");
+
+    return uint32_t();
 }
 
 QueueFamilyIndices GXSystem::findQueueFamilies(VkPhysicalDevice device)

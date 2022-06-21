@@ -1,10 +1,10 @@
 #pragma once
 
-//Defines
+// defines
 #define GLFW_INCLUDE_VULKAN
-//Includes
+// 3rd party includes
 #include "GLFW/glfw3.h"
-
+// std includes
 #include <fstream>
 #include <iostream>
 #include <filesystem>
@@ -14,6 +14,8 @@
 #include <set>
 #include <optional>
 #include <algorithm>
+// 1st party includes
+#include "graphicsBuffers.h"
 
 //Useful structs
 struct QueueFamilyIndices
@@ -70,6 +72,8 @@ private:
     bool isDeviceSuitable(VkPhysicalDevice device);
 
     int rateDevice(VkPhysicalDevice device);
+
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
