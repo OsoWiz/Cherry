@@ -51,6 +51,7 @@ private:
     void pickPhysicalDevice();
     void createLogicalDevice();
     void createSwapChain();
+    void recreateSwapChain();
     void createImageViews();
     void createRenderPass();
     void createGraphicsPipeline();
@@ -64,6 +65,7 @@ private:
     static std::vector<char> readFile(const std::string& filename);
 
     void cleanup();
+    void cleanupSwapChain();
     void createInstance();
     void createSurface();
 

@@ -197,6 +197,18 @@ void GXSystem::createSwapChain()
 
 }
 
+void GXSystem::recreateSwapChain()
+{
+    vkDeviceWaitIdle(logDevice);
+
+    createSwapChain();
+    createImageViews();
+    createRenderPass();
+    createGraphicsPipeline();
+    createFramebuffers();
+
+}
+
 void GXSystem::createImageViews()
 {
     swapChainImageViews.resize(swapChainImages.size());
@@ -296,13 +308,15 @@ void GXSystem::createGraphicsPipeline()
 
     VkPipelineShaderStageCreateInfo stages[2] = { vertInfo, fragInfo };
 
+    auto bindDescription = Vertex::getBindingDescription();
+    auto attrDescription = Vertex::getAttributeDescriptions();
 
     VkPipelineVertexInputStateCreateInfo vertInputInfo{};
     vertInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-    vertInputInfo.vertexBindingDescriptionCount = 0;
-    vertInputInfo.pVertexBindingDescriptions = nullptr;
-    vertInputInfo.vertexAttributeDescriptionCount = 0;
-    vertInputInfo.pVertexAttributeDescriptions = nullptr;
+    vertInputInfo.vertexBindingDescriptionCount = 1;
+    vertInputInfo.pVertexBindingDescriptions = &bindDescription;
+    vertInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attrDescription.size());
+    vertInputInfo.pVertexAttributeDescriptions = attrDescription.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssemblyInfo{};
     inputAssemblyInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -486,6 +500,8 @@ void GXSystem::createCommandBuffers()
 
         vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
 
+        
+
         vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
 
         vkCmdEndRenderPass(commandBuffers[i]);
@@ -531,7 +547,17 @@ void GXSystem::drawFrame()
     vkWaitForFences(logDevice, 1, &frameFences[currentFrame], VK_TRUE, UINT64_MAX);
 
     uint32_t imageIndex;
-    vkAcquireNextImageKHR(logDevice, swapChain, UINT64_MAX, imagesReady[currentFrame], VK_NULL_HANDLE, &imageIndex);
+    VkResult res = vkAcquireNextImageKHR(logDevice, swapChain, UINT64_MAX, imagesReady[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+    if (res == VK_ERROR_OUT_OF_DATE_KHR) {
+        recreateSwapChain();
+        return;
+    }
+    else if (res != VK_SUCCESS && res != VK_SUBOPTIMAL_KHR) {
+        throw std::runtime_error("failed to acquire swap chain image");
+    }
+
+    vkResetFences(logDevice, 1, &frameFences[currentFrame]);
 
     if (imageFences[imageIndex] != VK_NULL_HANDLE) {
         vkWaitForFences(logDevice, 1, &imageFences[imageIndex], VK_TRUE, UINT64_MAX);
@@ -610,6 +636,8 @@ std::vector<char> GXSystem::readFile(const std::string& filename)
 
 void GXSystem::cleanup() {
 
+    cleanupSwapChain(); // cleans up pipeline, layout, renderpass, etc.
+
     for (size_t i = 0; i < concurrentFrames; i++) {
         vkDestroySemaphore(logDevice, rendersFinished[i], nullptr);
         vkDestroySemaphore(logDevice, imagesReady[i], nullptr);
@@ -618,18 +646,6 @@ void GXSystem::cleanup() {
 
     vkDestroyCommandPool(logDevice, commandPool, nullptr);
 
-    for (auto framebuffer : swapChainFramebuffers)
-        vkDestroyFramebuffer(logDevice, framebuffer, nullptr);
-
-
-    vkDestroyPipeline(logDevice, pipeline, nullptr);
-    vkDestroyPipelineLayout(logDevice, pipelineLayout, nullptr);
-    vkDestroyRenderPass(logDevice, renderPass, nullptr);
-
-    for (auto imageView : this->swapChainImageViews)
-        vkDestroyImageView(this->logDevice, imageView, nullptr);
-
-    vkDestroySwapchainKHR(this->logDevice, this->swapChain, nullptr); //destroy swapchain
 
     vkDestroyDevice(this->logDevice, nullptr); //queues are destroyed when logicaldevice is destroyed
 
@@ -646,6 +662,24 @@ void GXSystem::cleanup() {
     glfwDestroyWindow(window);
 
     glfwTerminate();
+}
+
+void GXSystem::cleanupSwapChain()
+{
+
+    for (auto framebuffer : swapChainFramebuffers)
+        vkDestroyFramebuffer(logDevice, framebuffer, nullptr);
+
+
+    vkDestroyPipeline(logDevice, pipeline, nullptr);
+    vkDestroyPipelineLayout(logDevice, pipelineLayout, nullptr);
+    vkDestroyRenderPass(logDevice, renderPass, nullptr);
+
+    for (auto imageView : swapChainImageViews)
+        vkDestroyImageView(logDevice, imageView, nullptr);
+
+    vkDestroySwapchainKHR(logDevice, this->swapChain, nullptr);
+
 }
 
 //Helpers or smaller functions

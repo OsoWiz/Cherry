@@ -16,12 +16,32 @@ struct Vertex {
 	///<summary>
 	/// Returns the format in which the vertex shader input is.
 	///</summary>
-	VkVertexInputBindingDescription getBindingDescription();
+	static VkVertexInputBindingDescription getBindingDescription();
 
 	///<summary>
 	/// Returns how to interpret the members of vertexdata
 	///</summary>
-	std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+	static std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions();
+};
+
+///<summary>
+/// Vertex buffer wrapper that deals with allocation and deallocation.
+///</summary>
+class VertexBuffer 
+{
+
+	VertexBuffer(VkDevice device, size_t size, uint32_t memType, std::vector<Vertex> vertices);
+	~VertexBuffer();
+
+	void bindForRender(VkCommandBuffer cmdBuffer);
+
+private:
+	VkDevice allocatorDevice;
+
+	VkBuffer vertexBuffer;
+	VkDeviceMemory gpuMemory;
+
+	std::vector<Vertex> vertexData;
 };
 
 ///<summary>
@@ -33,4 +53,12 @@ struct Vertex {
 ///</summary>
 VkBuffer createVertexBuffer(VkDevice device, size_t size);
 
-void createIndexBuffer();
+// void createIndexBuffer(); Should be created when creating a buffer? maybe we should combine the two as they are used together anyway.
+
+//Dummy data tetrahedron
+const std::vector<Vertex> tetrahedronVertices = {
+	{{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+	{{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
+	{{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+	{{1.0f, 1.0f, 0.0f}, {0.8f, 0.7f, 0.0f}}
+};

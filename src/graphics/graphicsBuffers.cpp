@@ -27,6 +27,54 @@ std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescription
 	return attributeDescriptions;
 }
 
+VertexBuffer::VertexBuffer(VkDevice device, size_t memSize, uint32_t memType, std::vector<Vertex> vertices):allocatorDevice(device), vertexData(vertices)
+{
+	VkBufferCreateInfo bufferInfo{};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = memSize;
+	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if (vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create vertex buffer object");
+	}
+
+	VkMemoryRequirements memRegs;
+	vkGetBufferMemoryRequirements(allocatorDevice, vertexBuffer, &memRegs);
+
+	VkMemoryAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRegs.size;
+	allocInfo.memoryTypeIndex = memType;
+
+	if (vkAllocateMemory(allocatorDevice, &allocInfo, nullptr, &gpuMemory) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate gpu memory");
+	}
+
+	vkBindBufferMemory(allocatorDevice, vertexBuffer, gpuMemory, 0);
+
+	// map -> copy -> unmap
+	void* data;
+	vkMapMemory(allocatorDevice, gpuMemory, 0, memSize, 0, &data);
+	memcpy(data, vertices.data(), memSize);
+	vkUnmapMemory(allocatorDevice, gpuMemory);
+
+
+}
+
+VertexBuffer::~VertexBuffer()
+{
+	vkDestroyBuffer(allocatorDevice, vertexBuffer, nullptr);
+	vkFreeMemory(allocatorDevice, gpuMemory, nullptr);
+}
+
+void VertexBuffer::bindForRender(VkCommandBuffer cmdBuffer)
+{
+	VkBuffer buffers[] = { vertexBuffer };
+	VkDeviceSize offsets[] = { 0 };
+	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, buffers, offsets);
+}
+
 VkBuffer createVertexBuffer(VkDevice device, size_t size)
 { // VkBuffer is a handle, so copying it __should__ not cause problems
 	VkBuffer vertexBuffer;
@@ -44,7 +92,4 @@ VkBuffer createVertexBuffer(VkDevice device, size_t size)
 	return vertexBuffer;
 }
 
-void createIndexBuffer()
-{
-}
 
