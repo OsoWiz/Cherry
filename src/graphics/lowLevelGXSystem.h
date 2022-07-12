@@ -1,19 +1,29 @@
 #pragma once
 
-//Defines
-#define _GLFW_WIN32
+// defines
 #define GLFW_INCLUDE_VULKAN
-//Includes
-#include <glfw-3.3.7/include/GLFW/glfw3.h>
-
+// 3rd party includes
+#include "GLFW/glfw3.h"
+// std includes
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 #include <stdexcept>
 #include <cstdlib>
 #include <vector>
 #include <set>
 #include <optional>
 #include <algorithm>
+// 1st party includes
+#include "graphicsBuffers.h"
+
+//Flags
+enum class GXFlags:uint8_t
+{
+    FRAMEBUFFER_RESIZED = 1,
+    RANDOM_FLAG         = 2
+};
+
 
 //Useful structs
 struct QueueFamilyIndices
@@ -42,6 +52,8 @@ public:
 private:
     //Functions
     void initWindow();
+    static void frameBufferResizeCallback(GLFWwindow* window, int width, int height);
+
 
     void initVulkan();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -49,6 +61,7 @@ private:
     void pickPhysicalDevice();
     void createLogicalDevice();
     void createSwapChain();
+    void recreateSwapChain();
     void createImageViews();
     void createRenderPass();
     void createGraphicsPipeline();
@@ -59,17 +72,24 @@ private:
 
     void drawFrame();
     void mainLoop();
+
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imIndex);
+
     static std::vector<char> readFile(const std::string& filename);
 
     void cleanup();
+    void cleanupSwapChain();
     void createInstance();
     void createSurface();
+
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     bool checkValidationLayerSupport();
     bool isDeviceSuitable(VkPhysicalDevice device);
 
     int rateDevice(VkPhysicalDevice device);
+
+    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
@@ -130,6 +150,8 @@ private:
 
     const int concurrentFrames = 2;
     size_t currentFrame = 0;
+
+    uint8_t flags = 0u; // currently support for 8 flags
 
     const std::vector<const char*> validationlayers = {
         "VK_LAYER_KHRONOS_validation"
