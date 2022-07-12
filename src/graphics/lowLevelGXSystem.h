@@ -17,6 +17,14 @@
 // 1st party includes
 #include "graphicsBuffers.h"
 
+//Flags
+enum class GXFlags:uint8_t
+{
+    FRAMEBUFFER_RESIZED = 1,
+    RANDOM_FLAG         = 2
+};
+
+
 //Useful structs
 struct QueueFamilyIndices
 {
@@ -44,6 +52,8 @@ public:
 private:
     //Functions
     void initWindow();
+    static void frameBufferResizeCallback(GLFWwindow* window, int width, int height);
+
 
     void initVulkan();
     void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
@@ -62,12 +72,16 @@ private:
 
     void drawFrame();
     void mainLoop();
+
+    void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imIndex);
+
     static std::vector<char> readFile(const std::string& filename);
 
     void cleanup();
     void cleanupSwapChain();
     void createInstance();
     void createSurface();
+
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device);
     bool checkValidationLayerSupport();
@@ -136,6 +150,8 @@ private:
 
     const int concurrentFrames = 2;
     size_t currentFrame = 0;
+
+    uint8_t flags = 0u; // currently support for 8 flags
 
     const std::vector<const char*> validationlayers = {
         "VK_LAYER_KHRONOS_validation"

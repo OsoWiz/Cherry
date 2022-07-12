@@ -15,10 +15,17 @@ void GXSystem::initWindow() {
     glfwInit();
     //Some arguments
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+
 
     this->window = glfwCreateWindow(this->WIDTH, this->HEIGHT, "Vulkan", nullptr, nullptr);
+    glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, frameBufferResizeCallback);
+}
 
+void GXSystem::frameBufferResizeCallback(GLFWwindow* window, int width, int height) 
+{
+    auto system = reinterpret_cast<GXSystem*>(glfwGetWindowUserPointer(window));
+    system->flags |= 1u; // set resize flag
 }
 
 void GXSystem::initVulkan() {
@@ -460,9 +467,69 @@ void GXSystem::createCommandPool()
 
 }
 
+void GXSystem::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imIndex)
+{
+    VkCommandBufferBeginInfo cmdInfo{};
+    cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+    cmdInfo.flags = 0; //optional
+
+
+    //Let's begin recording
+    if (vkBeginCommandBuffer(commandBuffer, &cmdInfo) != VK_SUCCESS)
+        throw std::runtime_error("failed to begin command buffer recording");
+
+
+    VkRenderPassBeginInfo renderInfo{};
+    renderInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderInfo.renderPass = renderPass;
+    renderInfo.framebuffer = swapChainFramebuffers[imIndex];
+    renderInfo.renderArea.offset = { 0,0 };
+    renderInfo.renderArea.extent = swapChainExtent;
+
+    VkClearValue clearCol = { {{0.f, 0.f, 0.f, 1.f}} };
+    renderInfo.clearValueCount = 1;
+    renderInfo.pClearValues = &clearCol;
+
+
+    vkCmdBeginRenderPass(commandBuffer, &renderInfo, VK_SUBPASS_CONTENTS_INLINE); //void
+
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
+
+    VkViewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)swapChainExtent.width;
+    viewport.height = (float)swapChainExtent.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+
+    VkRect2D scissor{};
+    scissor.offset = { 0, 0 };
+    scissor.extent = swapChainExtent;
+    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+    // TODO korvaa jollain kunnon vertex buffer creation/ bind setillä
+    /*
+    VkBuffer vertexBuffers[] = { vertexBuffer };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets); */
+
+    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+
+    vkCmdEndRenderPass(commandBuffer);
+
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+        throw std::runtime_error("Failed to record command buffer");
+
+    //recording has ended
+
+
+}
+
 void GXSystem::createCommandBuffers()
 {
-    commandBuffers.resize(swapChainFramebuffers.size());
+    commandBuffers.resize(concurrentFrames);
 
     VkCommandBufferAllocateInfo allocInfo{}; //wow, alloc and not create?
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -472,50 +539,6 @@ void GXSystem::createCommandBuffers()
 
     if (vkAllocateCommandBuffers(logDevice, &allocInfo, commandBuffers.data()) != VK_SUCCESS)
         throw std::runtime_error("Failed to allocate command buffers");
-
-    for (size_t i = 0u; i < commandBuffers.size(); i++) {
-        VkCommandBufferBeginInfo cmdInfo{};
-        cmdInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        cmdInfo.flags = 0; //optional
-
-
-        //Let's begin recording
-        if (vkBeginCommandBuffer(commandBuffers[i], &cmdInfo) != VK_SUCCESS)
-            throw std::runtime_error("failed to begin command buffer recording");
-
-
-        VkRenderPassBeginInfo renderInfo{};
-        renderInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderInfo.renderPass = renderPass;
-        renderInfo.framebuffer = swapChainFramebuffers[i];
-        renderInfo.renderArea.offset = { 0,0 };
-        renderInfo.renderArea.extent = swapChainExtent;
-
-        VkClearValue clearCol = { {{0.f, 0.f, 0.f, 1.f}} };
-        renderInfo.clearValueCount = 1;
-        renderInfo.pClearValues = &clearCol;
-
-
-        vkCmdBeginRenderPass(commandBuffers[i], &renderInfo, VK_SUBPASS_CONTENTS_INLINE); //void
-
-        vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline);
-
-        
-
-        vkCmdDraw(commandBuffers[i], 3, 1, 0, 0);
-
-        vkCmdEndRenderPass(commandBuffers[i]);
-
-        if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS)
-            throw std::runtime_error("Failed to record command buffer");
-
-        //recording has ended
-
-
-    }
-
-
-
 }
 
 void GXSystem::createSynchronization()
@@ -559,9 +582,8 @@ void GXSystem::drawFrame()
 
     vkResetFences(logDevice, 1, &frameFences[currentFrame]);
 
-    if (imageFences[imageIndex] != VK_NULL_HANDLE) {
-        vkWaitForFences(logDevice, 1, &imageFences[imageIndex], VK_TRUE, UINT64_MAX);
-    }
+    vkResetCommandBuffer(commandBuffers[currentFrame], 0);
+    recordCommandBuffer(commandBuffers[currentFrame], currentFrame);
 
     imageFences[imageIndex] = frameFences[currentFrame]; //
 
@@ -572,7 +594,6 @@ void GXSystem::drawFrame()
     VkSemaphore waitSemaphores[] = { imagesReady[currentFrame] };
     VkSemaphore signalSemaphores[] = { rendersFinished[currentFrame] };
 
-    VkSwapchainKHR swapChains[] = { swapChain };
 
     VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 
@@ -584,9 +605,6 @@ void GXSystem::drawFrame()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-
-    vkResetFences(logDevice, 1, &frameFences[currentFrame]); //resets fence signal for use
-
     if (vkQueueSubmit(graphicsQueue, 1, &submitInfo, frameFences[currentFrame]) != VK_SUCCESS)
         throw std::runtime_error("Failed to submit draw command buffer");
 
@@ -595,11 +613,20 @@ void GXSystem::drawFrame()
     presInfo.waitSemaphoreCount = 1;
     presInfo.pWaitSemaphores = signalSemaphores;
 
+    VkSwapchainKHR swapChains[] = { swapChain };
     presInfo.swapchainCount = 1;
     presInfo.pSwapchains = swapChains;
     presInfo.pImageIndices = &imageIndex;
 
-    vkQueuePresentKHR(presentQueue, &presInfo);
+    VkResult presentResult = vkQueuePresentKHR(presentQueue, &presInfo);
+
+    if (presentResult == VK_ERROR_OUT_OF_DATE_KHR || presentResult == VK_SUBOPTIMAL_KHR || (flags & (uint8_t) GXFlags::FRAMEBUFFER_RESIZED)) {
+        flags &= 0xFE; // should zero the last bit
+        recreateSwapChain();
+    }
+    else if (presentResult != VK_SUCCESS) {
+        throw std::runtime_error("failed to present swap chain image!");
+    }
 
     currentFrame = (currentFrame + 1) % concurrentFrames;
 }
