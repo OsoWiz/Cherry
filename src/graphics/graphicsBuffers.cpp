@@ -27,6 +27,8 @@ std::array<VkVertexInputAttributeDescription, 2> Vertex::getAttributeDescription
 	return attributeDescriptions;
 }
 
+#pragma region classBuffers
+
 VertexBuffer::VertexBuffer(VkDevice device, size_t memSize, uint32_t memType, std::vector<Vertex> vertices):allocatorDevice(device), vertexData(vertices)
 {
 	VkBufferCreateInfo bufferInfo{};
@@ -75,7 +77,12 @@ void VertexBuffer::bindForRender(VkCommandBuffer cmdBuffer)
 	vkCmdBindVertexBuffers(cmdBuffer, 0, 1, buffers, offsets);
 }
 
-VkBuffer createVertexBuffer(VkDevice device, size_t size)
+#pragma endregion classBuffers
+
+#pragma region functionalBuffers
+
+
+VkBuffer GXBuffer::createVertexBuffer(VkDevice device, size_t size)
 { // VkBuffer is a handle, so copying it __should__ not cause problems
 	VkBuffer vertexBuffer;
 
@@ -92,4 +99,52 @@ VkBuffer createVertexBuffer(VkDevice device, size_t size)
 	return vertexBuffer;
 }
 
+VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer, uint32_t memType)
+{
+	VkMemoryRequirements memRegs;
+	vkGetBufferMemoryRequirements(allocator, buffer, &memRegs);
 
+	// TODO configurable later?
+	uint32_t memType = findMemoryType(gpu, memRegs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+	VkMemoryAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+	allocInfo.allocationSize = memRegs.size;
+	allocInfo.memoryTypeIndex = memType;
+
+	VkDeviceMemory gpuMem;
+
+	if (vkAllocateMemory(allocator, &allocInfo, nullptr, &gpuMem) != VK_SUCCESS) {
+		throw std::runtime_error("failed to allocate gpu memory");
+	}
+
+	return gpuMem;
+}
+
+
+void GXBuffer::copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, std::vector<Vertex> vertices)
+{
+	void* data;
+	vkMapMemory(allocator, gpuMem, 0, memSize, 0, &data);
+	memcpy(data, vertices.data(), memSize);
+	vkUnmapMemory(allocator, gpuMem);
+}
+
+uint32_t GXBuffer::findMemoryType(VkPhysicalDevice gpu, uint32_t typeFilter, VkMemoryPropertyFlags properties)
+{
+	VkPhysicalDeviceMemoryProperties gpuMemProp;
+	vkGetPhysicalDeviceMemoryProperties(gpu, &gpuMemProp); // evaluates the props
+
+	for (uint32_t i = 0u; i < gpuMemProp.memoryTypeCount; i++) {
+		if (typeFilter & (i << i)
+			&& (gpuMemProp.memoryTypes[i].propertyFlags & properties) == properties) {
+			return i;
+		}
+	}
+
+	throw std::runtime_error("No memory type found suitable");
+
+	return uint32_t();
+}
+
+#pragma endregion functionalBuffers

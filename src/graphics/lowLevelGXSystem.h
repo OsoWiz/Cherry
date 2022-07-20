@@ -4,6 +4,7 @@
 #define GLFW_INCLUDE_VULKAN
 // 3rd party includes
 #include "GLFW/glfw3.h"
+#include <shaderc/shaderc.h>
 // std includes
 #include <fstream>
 #include <iostream>
@@ -48,7 +49,8 @@ class GXSystem
 {
 public:
     void run();
-
+    // submitwork
+    // drawmodel
 private:
     //Functions
     void initWindow();
@@ -67,6 +69,7 @@ private:
     void createGraphicsPipeline();
     void createFramebuffers();
     void createCommandPool();
+    void createVertexBuffer();
     void createCommandBuffers();
     void createSynchronization();
 
@@ -74,6 +77,7 @@ private:
     void mainLoop();
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imIndex);
+    void compileShader();
 
     static std::vector<char> readFile(const std::string& filename);
 
@@ -88,8 +92,6 @@ private:
     bool isDeviceSuitable(VkPhysicalDevice device);
 
     int rateDevice(VkPhysicalDevice device);
-
-    uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
     QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 
@@ -141,7 +143,7 @@ private:
     //Semaphores
     std::vector<VkSemaphore> imagesReady;
     std::vector<VkSemaphore> rendersFinished;
-    std::vector<VkFence>    frameFences; //bad wording?
+    std::vector<VkFence>    frameFences; // bad wording?
     std::vector<VkFence>    imageFences;
 
     //other variables
@@ -152,6 +154,10 @@ private:
     size_t currentFrame = 0;
 
     uint8_t flags = 0u; // currently support for 8 flags
+
+    ///TEMPORARY
+    VkBuffer vertexBuffer;
+
 
     const std::vector<const char*> validationlayers = {
         "VK_LAYER_KHRONOS_validation"

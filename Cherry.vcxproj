@@ -156,6 +156,8 @@
     <None Include="dependencies\glfw\docs\html\vulkan_guide.html" />
     <None Include="dependencies\glfw\docs\html\window_8dox.html" />
     <None Include="dependencies\glfw\docs\html\window_guide.html" />
+    <None Include="src\graphics\shaders\basic.frag" />
+    <None Include="src\graphics\shaders\basic.vert" />
     <None Include="src\graphics\shaders\frag.spv" />
     <None Include="src\graphics\shaders\vert.spv" />
   </ItemGroup>
@@ -266,7 +268,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>C:\VulkanSDK\1.2.162.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>vulkan-1.lib;shaderc.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <ProjectReference>
       <LinkLibraryDependencies>true</LinkLibraryDependencies>

@@ -16,7 +16,6 @@ void GXSystem::initWindow() {
     //Some arguments
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-
     this->window = glfwCreateWindow(this->WIDTH, this->HEIGHT, "Vulkan", nullptr, nullptr);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, frameBufferResizeCallback);
@@ -40,6 +39,7 @@ void GXSystem::initVulkan() {
     createGraphicsPipeline(); //Creates a rendering pipeline (immutable stuff in vulkan)
     createFramebuffers();   //Creates the framebuffers
     createCommandPool();
+    createVertexBuffer(); // TODO Change to proper functionality
     createCommandBuffers();
     createSynchronization();
 }
@@ -467,6 +467,14 @@ void GXSystem::createCommandPool()
 
 }
 
+void GXSystem::createVertexBuffer()
+{
+    size_t bufferSize = GXBuffer::tetrahedronVertices.size() * sizeof(Vertex);
+    vertexBuffer = GXBuffer::createVertexBuffer(logDevice, bufferSize);
+    GXBuffer::allocateBuffer(logDevice, vertexBuffer, )
+
+}
+
 void GXSystem::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imIndex)
 {
     VkCommandBufferBeginInfo cmdInfo{};
@@ -509,11 +517,11 @@ void GXSystem::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imInd
     scissor.extent = swapChainExtent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    // TODO korvaa jollain kunnon vertex buffer creation/ bind setillä
-    /*
+    
+    auto vertexBuffer = new VertexBuffer();
     VkBuffer vertexBuffers[] = { vertexBuffer };
     VkDeviceSize offsets[] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets); */
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets); 
 
     vkCmdDraw(commandBuffer, 3, 1, 0, 0);
 
@@ -525,6 +533,12 @@ void GXSystem::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imInd
     //recording has ended
 
 
+}
+
+void GXSystem::compileShader()
+{
+    // shaderc_compiler comp();
+    // shaderc_compile_into_spv()
 }
 
 void GXSystem::createCommandBuffers()
@@ -842,23 +856,6 @@ int GXSystem::rateDevice(VkPhysicalDevice device)
 
 
     return 1;
-}
-
-uint32_t GXSystem::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties)
-{
-    VkPhysicalDeviceMemoryProperties gpuMemProp;
-    vkGetPhysicalDeviceMemoryProperties(gpu, &gpuMemProp); // evaluates the props
-
-    for (uint32_t i = 0u; i < gpuMemProp.memoryTypeCount; i++) {
-        if (typeFilter & (i << i)
-            && (gpuMemProp.memoryTypes[i].propertyFlags & properties) == properties) {
-            return i;
-        }
-    }
-
-    throw std::runtime_error("No memory type found suitable");
-
-    return uint32_t();
 }
 
 QueueFamilyIndices GXSystem::findQueueFamilies(VkPhysicalDevice device)

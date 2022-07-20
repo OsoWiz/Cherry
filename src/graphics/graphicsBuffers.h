@@ -1,5 +1,5 @@
 #pragma once
-#include "glm/vec3.hpp"
+#include <glm/vec3.hpp>
 #include <vulkan/vulkan.h>
 // std
 #include <array>
@@ -44,21 +44,46 @@ private:
 	std::vector<Vertex> vertexData;
 };
 
-///<summary>
-/// Returns a Vertex buffer object for given device with the specified size.
-/// <remark> 
-/// DOES NOT ALLOCATE/ASSIGN MEMORY FOR THE BUFFER. 
-/// However the size specified can be used in the allocation phase in order to make sure the memory size match
-/// </remark>
-///</summary>
-VkBuffer createVertexBuffer(VkDevice device, size_t size);
+namespace GXBuffer
+{
+	/// <summary>
+	/// Creates a vertex buffer
+	/// </summary>
+	/// <param name="device">device handle</param>
+	/// <param name="size">alloc size</param>
+	/// <returns>VkBuffer handle</returns>
+	VkBuffer createVertexBuffer(VkDevice device, size_t size);
 
-// void createIndexBuffer(); Should be created when creating a buffer? maybe we should combine the two as they are used together anyway.
+	/// <summary>
+	/// Function for allocating gpu memory
+	/// </summary>
+	/// <param name="allocator">device handle</param>
+	/// <param name="buffer">handle</param>
+	/// <param name="memType">is a memory type index</param>
+	/// <returns>VkDeviceMemory handle</returns>
+	VkDeviceMemory allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer, uint32_t memType);
 
-//Dummy data tetrahedron
-const std::vector<Vertex> tetrahedronVertices = {
-	{{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-	{{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
-	{{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-	{{1.0f, 1.0f, 0.0f}, {0.8f, 0.7f, 0.0f}}
-};
+	/// <summary>
+	///  Copies memory from host to the gpu
+	/// </summary>
+	/// <param name="allocator">logical device handle</param>
+	/// <param name="gpuMem">gpu memory handle</param>
+	/// <param name="memSize">copyable memory size</param>
+	/// <param name="vertices">vertex data</param>
+	void copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, std::vector<Vertex> vertices);
+
+	uint32_t findMemoryType(VkPhysicalDevice gpu, uint32_t typeFilter, VkMemoryPropertyFlags properties);
+
+
+	// void createIndexBuffer(); Should be created when creating a buffer? maybe we should combine the two as they are used together anyway.
+
+	//Dummy data tetrahedron
+	const std::vector<Vertex> tetrahedronVertices = {
+		// Position				Color
+		{{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+		{{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
+		{{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
+		{{1.0f, 1.0f, 0.0f}, {0.8f, 0.7f, 0.0f}}
+	};
+
+}

@@ -176,5 +176,7 @@
     <None Include="dependencies\glfw\docs\html\window_guide.html" />
     <None Include="src\graphics\shaders\vert.spv" />
     <None Include="src\graphics\shaders\frag.spv" />
+    <None Include="src\graphics\shaders\basic.vert" />
+    <None Include="src\graphics\shaders\basic.frag" />
   </ItemGroup>
 </Project>
