@@ -16,7 +16,7 @@ void GXSystem::initWindow() {
     //Some arguments
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    this->window = glfwCreateWindow(this->WIDTH, this->HEIGHT, "Vulkan", nullptr, nullptr);
+    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
     glfwSetWindowUserPointer(window, this);
     glfwSetFramebufferSizeCallback(window, frameBufferResizeCallback);
 }
@@ -189,19 +189,19 @@ void GXSystem::createSwapChain()
     swapInfo.presentMode = mode;
     swapInfo.clipped = VK_TRUE;
 
-    swapInfo.oldSwapchain = VK_NULL_HANDLE;
+    swapInfo.oldSwapchain = this->swapChain ? this->swapChain : VK_NULL_HANDLE;
 
     if (vkCreateSwapchainKHR(logDevice, &swapInfo, nullptr, &swapChain) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create a swapchain");
     }
 
-    //Get the images??
-    vkGetSwapchainImagesKHR(this->logDevice, swapChain, &imageCount, nullptr);
-    this->swapChainImages.resize(imageCount);
-    vkGetSwapchainImagesKHR(this->logDevice, swapChain, &imageCount, swapChainImages.data());
+    // Get the images??
+    vkGetSwapchainImagesKHR(logDevice, swapChain, &imageCount, nullptr);
+    swapChainImages.resize(imageCount);
+    vkGetSwapchainImagesKHR(logDevice, swapChain, &imageCount, swapChainImages.data());
 
-    this->swapChainImageFormat = format.format;
-    this->swapChainExtent = extent;
+    swapChainImageFormat = format.format;
+    swapChainExtent = extent;
 
 }
 
@@ -233,7 +233,7 @@ void GXSystem::createImageViews()
         imageInfo.image = swapChainImages[i];
         imageInfo.viewType = VK_IMAGE_VIEW_TYPE_2D; //how image should be interpreted, for example you might use images as 2d textures.
         imageInfo.format = swapChainImageFormat; //how image should be interpreted
-
+        
         imageInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
         imageInfo.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
         imageInfo.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -245,7 +245,7 @@ void GXSystem::createImageViews()
         imageInfo.subresourceRange.baseArrayLayer = 0;
         imageInfo.subresourceRange.layerCount = 1;
 
-        if (vkCreateImageView(this->logDevice, &imageInfo, nullptr, &this->swapChainImageViews[i]) != VK_SUCCESS)
+        if (vkCreateImageView(logDevice, &imageInfo, nullptr, &swapChainImageViews[i]) != VK_SUCCESS)
             throw std::runtime_error("Failed to create an image view");
 
     }
@@ -335,26 +335,11 @@ void GXSystem::createGraphicsPipeline()
     inputAssemblyInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
     inputAssemblyInfo.primitiveRestartEnable = VK_FALSE;
 
-    VkViewport viewPort{};
-    viewPort.x = 0.f;
-    viewPort.y = 0.f;
-    viewPort.width = swapChainExtent.width;
-    viewPort.height = swapChainExtent.height;
-    viewPort.minDepth = 0.f;
-    viewPort.maxDepth = 1.f;
-
-    VkRect2D scissor{};
-    scissor.offset = { 0,0 };
-    scissor.extent = swapChainExtent;
-
-
     VkPipelineViewportStateCreateInfo viewportInfo{};
     viewportInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
     viewportInfo.viewportCount = 1;
-    viewportInfo.pViewports = &viewPort;
     viewportInfo.scissorCount = 1;
-    viewportInfo.pScissors = &scissor;
-
+    
 
     VkPipelineRasterizationStateCreateInfo rasterInfo{};
     rasterInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -400,10 +385,11 @@ void GXSystem::createGraphicsPipeline()
     colorBlendInfo.blendConstants[3] = 0.0f;
     //constants optional
 
-    std::vector<VkDynamicState> dynamStates = {
+    std::vector<VkDynamicState> dynamStates = { // previously static
         VK_DYNAMIC_STATE_VIEWPORT,
         VK_DYNAMIC_STATE_SCISSOR
     };
+
     VkPipelineDynamicStateCreateInfo dynamicStateInfo;
     dynamicStateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicStateInfo.dynamicStateCount = static_cast<uint32_t>(dynamStates.size());
@@ -465,7 +451,6 @@ void GXSystem::createFramebuffers()
         frameInfo.layers = 1;
         if (vkCreateFramebuffer(logDevice, &frameInfo, nullptr, &swapChainFramebuffers[i]) != VK_SUCCESS)
             throw std::runtime_error("failed to create a framebuffer");
-
     }
 
 
@@ -581,7 +566,6 @@ void GXSystem::createSynchronization()
     imagesReady.resize(concurrentFrames);
     rendersFinished.resize(concurrentFrames);
     frameFences.resize(concurrentFrames);
-    imageFences.resize(swapChainImages.size(), VK_NULL_HANDLE);
 
     VkSemaphoreCreateInfo semaInfo{};
     semaInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -988,6 +972,7 @@ VkExtent2D GXSystem::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabiliti
         actual.width = std::clamp(actual.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
         actual.height = std::clamp(actual.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
 
+        return actual;
     }
 }
 
