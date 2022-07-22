@@ -155,9 +155,12 @@ private:
 
     uint8_t flags = 0u; // currently support for 8 flags
 
+    // TODO remove
+    bool frameBufferResized = false;
+
     ///TEMPORARY
     VkBuffer vertexBuffer;
-
+    VkDeviceMemory bufferMemory;
 
     const std::vector<const char*> validationlayers = {
         "VK_LAYER_KHRONOS_validation"

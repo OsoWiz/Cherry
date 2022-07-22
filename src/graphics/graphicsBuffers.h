@@ -61,7 +61,7 @@ namespace GXBuffer
 	/// <param name="buffer">handle</param>
 	/// <param name="memType">is a memory type index</param>
 	/// <returns>VkDeviceMemory handle</returns>
-	VkDeviceMemory allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer, uint32_t memType);
+	VkDeviceMemory allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer);
 
 	/// <summary>
 	///  Copies memory from host to the gpu
@@ -71,6 +71,8 @@ namespace GXBuffer
 	/// <param name="memSize">copyable memory size</param>
 	/// <param name="vertices">vertex data</param>
 	void copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, std::vector<Vertex> vertices);
+
+	void freeAndDestroyBuffer(VkDevice allocator, VkBuffer buffer, VkDeviceMemory bufferMemory);
 
 	uint32_t findMemoryType(VkPhysicalDevice gpu, uint32_t typeFilter, VkMemoryPropertyFlags properties);
 
@@ -84,6 +86,13 @@ namespace GXBuffer
 		{{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
 		{{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
 		{{1.0f, 1.0f, 0.0f}, {0.8f, 0.7f, 0.0f}}
+	};
+
+	const std::vector<Vertex> triangleVertices = {
+		// Position				Color
+		{{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+		{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+		{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
 	};
 
 }

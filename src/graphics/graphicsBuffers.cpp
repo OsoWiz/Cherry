@@ -99,7 +99,7 @@ VkBuffer GXBuffer::createVertexBuffer(VkDevice device, size_t size)
 	return vertexBuffer;
 }
 
-VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer, uint32_t memType)
+VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer)
 {
 	VkMemoryRequirements memRegs;
 	vkGetBufferMemoryRequirements(allocator, buffer, &memRegs);
@@ -118,6 +118,7 @@ VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu
 		throw std::runtime_error("failed to allocate gpu memory");
 	}
 
+
 	return gpuMem;
 }
 
@@ -128,6 +129,12 @@ void GXBuffer::copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t
 	vkMapMemory(allocator, gpuMem, 0, memSize, 0, &data);
 	memcpy(data, vertices.data(), memSize);
 	vkUnmapMemory(allocator, gpuMem);
+}
+
+void GXBuffer::freeAndDestroyBuffer(VkDevice allocator, VkBuffer buffer, VkDeviceMemory bufferMemory)
+{
+	vkDestroyBuffer(allocator, buffer, nullptr);
+	vkFreeMemory(allocator, bufferMemory, nullptr);
 }
 
 uint32_t GXBuffer::findMemoryType(VkPhysicalDevice gpu, uint32_t typeFilter, VkMemoryPropertyFlags properties)

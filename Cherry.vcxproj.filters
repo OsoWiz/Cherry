@@ -178,5 +178,10 @@
     <None Include="src\graphics\shaders\frag.spv" />
     <None Include="src\graphics\shaders\basic.vert" />
     <None Include="src\graphics\shaders\basic.frag" />
+    <None Include="src\graphics\shaders\compileSimpleShaders.bat">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="src\graphics\shaders\basicVert.spv" />
+    <None Include="src\graphics\shaders\basicFrag.spv" />
   </ItemGroup>
 </Project>
