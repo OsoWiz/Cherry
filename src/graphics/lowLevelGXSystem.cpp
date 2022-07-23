@@ -156,7 +156,6 @@ void GXSystem::createSwapChain()
     if (imageCount > details.capabilities.maxImageCount && details.capabilities.maxImageCount > 0) //0 means "infinite". So > 0 means it has a limit
         imageCount = details.capabilities.maxImageCount;
 
-    //Info time!!
     VkSwapchainCreateInfoKHR swapInfo{};
     swapInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
     swapInfo.surface = this->surface;
@@ -189,7 +188,7 @@ void GXSystem::createSwapChain()
     swapInfo.presentMode = mode;
     swapInfo.clipped = VK_TRUE;
 
-    swapInfo.oldSwapchain = this->swapChain ? this->swapChain : VK_NULL_HANDLE;
+    swapInfo.oldSwapchain = VK_NULL_HANDLE; // old swapchain is destroyed anyway.
 
     if (vkCreateSwapchainKHR(logDevice, &swapInfo, nullptr, &swapChain) != VK_SUCCESS) {
         throw std::runtime_error("Failed to create a swapchain");
@@ -216,6 +215,8 @@ void GXSystem::recreateSwapChain()
     }
 
     vkDeviceWaitIdle(logDevice);
+
+    cleanupSwapChain();
 
     createSwapChain();
     createImageViews();
@@ -529,7 +530,7 @@ void GXSystem::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imInd
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets); 
 
-    vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+    vkCmdDraw(commandBuffer, static_cast<uint32_t>(GXBuffer::triangleVertices.size()), 1, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -723,7 +724,7 @@ void GXSystem::cleanupSwapChain()
     for (auto imageView : swapChainImageViews)
         vkDestroyImageView(logDevice, imageView, nullptr);
 
-    vkDestroySwapchainKHR(logDevice, this->swapChain, nullptr);
+    vkDestroySwapchainKHR(logDevice, swapChain, nullptr);
 
 }
 
@@ -740,7 +741,7 @@ void GXSystem::createInstance() {
     info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     info.pApplicationName = "VKrenderer";
     info.applicationVersion = VK_MAKE_VERSION(1, 0, 0); // version 1.00?
-    info.pEngineName = "No Engine"; //Why tho?
+    info.pEngineName = "No Engine"; // Why tho?
     info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
     info.apiVersion = VK_API_VERSION_1_0;
 
@@ -914,7 +915,6 @@ SwapChainSupportDetails GXSystem::querySwapChainSupport(VkPhysicalDevice device)
         details.presentModes.resize(presentModeCount);    //usually we just created the vector, but now that we have a struct we just resize it
         vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface, &presentModeCount, details.presentModes.data());
     }
-
 
     return details;
 }
