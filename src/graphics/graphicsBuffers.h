@@ -47,10 +47,19 @@ private:
 namespace GXBuffer
 {
 	/// <summary>
+	/// Creates buffer for a given usage flag and size
+	/// </summary>
+	/// <param name="device">handle</param>
+	/// <param name="size"> of the buffer</param>
+	/// <param name="usageFlags"> implies the usage of the buffer</param>
+	/// <returns>VkBuffer handle</returns>
+	VkBuffer createBuffer(VkDevice device, size_t size, VkBufferUsageFlags usageFlags);
+
+	/// <summary>
 	/// Creates a vertex buffer
 	/// </summary>
-	/// <param name="device">device handle</param>
-	/// <param name="size">alloc size</param>
+	/// <param name="device">handle</param>
+	/// <param name="size">of the alloc</param>
 	/// <returns>VkBuffer handle</returns>
 	VkBuffer createVertexBuffer(VkDevice device, size_t size);
 
@@ -58,10 +67,11 @@ namespace GXBuffer
 	/// Function for allocating gpu memory
 	/// </summary>
 	/// <param name="allocator">device handle</param>
+	/// <param name="gpu">handle</param>
 	/// <param name="buffer">handle</param>
-	/// <param name="memType">is a memory type index</param>
+	/// <param name="memoryFlags">indicates required memory flag bits.</param>
 	/// <returns>VkDeviceMemory handle</returns>
-	VkDeviceMemory allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer);
+	VkDeviceMemory allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer, VkMemoryPropertyFlags memoryFlags);
 
 	/// <summary>
 	///  Copies memory from host to the gpu
@@ -71,6 +81,17 @@ namespace GXBuffer
 	/// <param name="memSize">copyable memory size</param>
 	/// <param name="vertices">vertex data</param>
 	void copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, std::vector<Vertex> vertices);
+
+	/// <summary>
+	/// Copies source buffer to dst
+	/// </summary>
+	/// <param name="device"></param>
+	/// <param name="src"></param>
+	/// <param name="dst"></param>
+	/// <param name="cmdPool"></param>
+	/// <param name="queue"> is the submit queue</param>
+	/// <param name="copyRegion"> is the region copy will happen</param>
+	void copyBuffer(VkDevice device, VkBuffer src, VkBuffer dst, VkCommandPool cmdPool, VkQueue queue, const VkBufferCopy& copyRegion);
 
 	void freeAndDestroyBuffer(VkDevice allocator, VkBuffer buffer, VkDeviceMemory bufferMemory);
 

@@ -81,6 +81,22 @@ void VertexBuffer::bindForRender(VkCommandBuffer cmdBuffer)
 
 #pragma region functionalBuffers
 
+VkBuffer GXBuffer::createBuffer(VkDevice device, size_t size, VkBufferUsageFlags usageFlags) 
+{
+	VkBuffer buffer;
+
+	VkBufferCreateInfo bufferInfo{};
+	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+	bufferInfo.size = size;
+	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+	if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
+		throw std::runtime_error("failed to create vertex buffer");
+	}
+
+	return buffer;
+}
 
 VkBuffer GXBuffer::createVertexBuffer(VkDevice device, size_t size)
 { // VkBuffer is a handle, so copying it __should__ not cause problems
@@ -99,13 +115,12 @@ VkBuffer GXBuffer::createVertexBuffer(VkDevice device, size_t size)
 	return vertexBuffer;
 }
 
-VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer)
+VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer, VkMemoryPropertyFlags memoryFlags)
 {
 	VkMemoryRequirements memRegs;
 	vkGetBufferMemoryRequirements(allocator, buffer, &memRegs);
 
-	// TODO configurable later?
-	uint32_t memType = findMemoryType(gpu, memRegs.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+	uint32_t memType = findMemoryType(gpu, memRegs.memoryTypeBits, memoryFlags);
 
 	VkMemoryAllocateInfo allocInfo{};
 	allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -129,6 +144,47 @@ void GXBuffer::copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t
 	vkMapMemory(allocator, gpuMem, 0, memSize, 0, &data);
 	memcpy(data, vertices.data(), memSize);
 	vkUnmapMemory(allocator, gpuMem);
+}
+
+void GXBuffer::copyBuffer(VkDevice device, VkBuffer src, VkBuffer dst, VkCommandPool cmdPool, VkQueue queue, const VkBufferCopy &copyRegion)
+{
+	// allocate
+	VkCommandBufferAllocateInfo allocInfo{};
+	allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+	allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+	allocInfo.commandPool = cmdPool;
+	allocInfo.commandBufferCount = 1;
+	
+	VkCommandBuffer cmdBuffer;
+
+	if (vkAllocateCommandBuffers(device, &allocInfo, &cmdBuffer) != VK_SUCCESS)
+		throw std::runtime_error("failed to allocate command buffers for copying");
+
+	// record
+	VkCommandBufferBeginInfo begInfo{};
+	begInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+	begInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+	if (vkBeginCommandBuffer(cmdBuffer, &begInfo) != VK_SUCCESS)
+		throw std::runtime_error("failed to begin cmd buffer for copying");
+
+	vkCmdCopyBuffer(cmdBuffer, src, dst, 1, &copyRegion);
+
+	vkEndCommandBuffer(cmdBuffer);
+
+	// submit
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.commandBufferCount = 1;
+	submitInfo.pCommandBuffers = &cmdBuffer;
+	// you could theoretically set a semaphore or fence for this, but we currently have no need for such.
+
+	vkQueueSubmit(queue, 1, &submitInfo, VK_NULL_HANDLE);
+	vkQueueWaitIdle(queue);
+	// Fence would allow for multiple submits but that will be handled later.
+
+	vkFreeCommandBuffers(device, cmdPool, 1, &cmdBuffer);
+
 }
 
 void GXBuffer::freeAndDestroyBuffer(VkDevice allocator, VkBuffer buffer, VkDeviceMemory bufferMemory)
