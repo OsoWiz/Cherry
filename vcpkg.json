@@ -1,0 +1,12 @@
+{
+   "$schema": "https://raw.githubusercontent.com/microsoft/vcpkg/master/scripts/vcpkg.schema.json",
+  "name": "cherry",
+  "version": "0.51",
+  "dependencies": [
+    "glm",
+    "glfw3",
+    "vulkan",
+    "vulkan-headers",
+    "shaderc"
+  ]
+}
