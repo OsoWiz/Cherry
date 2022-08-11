@@ -474,13 +474,26 @@ void GXSystem::createCommandPool()
 
 }
 
-void GXSystem::createVertexBuffer()
-{
+void GXSystem::createVertexBuffer() //TODO change to proper functionality
+{ // currently uses staging buffer
     size_t bufferSize = GXBuffer::triangleVertices.size() * sizeof(Vertex);
-    vertexBuffer = GXBuffer::createVertexBuffer(logDevice, bufferSize);
-    bufferMemory = GXBuffer::allocateBuffer(logDevice, gpu, vertexBuffer);
-    vkBindBufferMemory(logDevice, vertexBuffer, bufferMemory, 0);
-    GXBuffer::copyMemoryToGpu(logDevice, bufferMemory, bufferSize, GXBuffer::triangleVertices);
+    
+    VkBuffer stagBuffer;
+    VkDeviceMemory stagBufferMem;
+    GXBuffer::createAllocateBindBuffer(logDevice, gpu, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagBuffer, stagBufferMem, bufferSize );
+    
+    // copies data to staging buffer.
+    GXBuffer::copyMemoryToGpu(logDevice, stagBufferMem, bufferSize, GXBuffer::triangleVertices);
+
+    GXBuffer::createAllocateBindBuffer(logDevice, gpu, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, bufferMemory, bufferSize);
+
+    // copy to device
+    VkBufferCopy cpyReg{};
+    cpyReg.size = bufferSize;
+    GXBuffer::copyBuffer(logDevice, stagBuffer, vertexBuffer, commandPool, graphicsQueue, cpyReg);
+
+    // free staging buff.
+    GXBuffer::freeAndDestroyBuffer(logDevice, stagBuffer, stagBufferMem);
 }
 
 void GXSystem::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imIndex)

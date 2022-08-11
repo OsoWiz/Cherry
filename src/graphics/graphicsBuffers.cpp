@@ -88,7 +88,7 @@ VkBuffer GXBuffer::createBuffer(VkDevice device, size_t size, VkBufferUsageFlags
 	VkBufferCreateInfo bufferInfo{};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
 	bufferInfo.size = size;
-	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+	bufferInfo.usage = usageFlags;
 	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
 	if (vkCreateBuffer(device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
@@ -98,21 +98,13 @@ VkBuffer GXBuffer::createBuffer(VkDevice device, size_t size, VkBufferUsageFlags
 	return buffer;
 }
 
-VkBuffer GXBuffer::createVertexBuffer(VkDevice device, size_t size)
-{ // VkBuffer is a handle, so copying it __should__ not cause problems
-	VkBuffer vertexBuffer;
+void GXBuffer::createAllocateBindBuffer(VkDevice device, VkPhysicalDevice gpu, VkBufferUsageFlags usage, VkMemoryPropertyFlags memProps, VkBuffer& buffer, VkDeviceMemory& mem, size_t size)
+{ 
+	buffer = createBuffer(device, size, usage);
+	// TODO hoida minttii. Staging ja t‰‰
+	mem = allocateBuffer(device, gpu, buffer, memProps);
 
-	VkBufferCreateInfo bufferInfo{};
-	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferInfo.size = size;
-	bufferInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-	bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-	if (vkCreateBuffer(device, &bufferInfo, nullptr, &vertexBuffer) != VK_SUCCESS) {
-		throw std::runtime_error("failed to create vertex buffer");
-	}
-
-	return vertexBuffer;
+	vkBindBufferMemory(device, buffer, mem, 0);
 }
 
 VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu, VkBuffer buffer, VkMemoryPropertyFlags memoryFlags)
@@ -132,7 +124,6 @@ VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu
 	if (vkAllocateMemory(allocator, &allocInfo, nullptr, &gpuMem) != VK_SUCCESS) {
 		throw std::runtime_error("failed to allocate gpu memory");
 	}
-
 
 	return gpuMem;
 }

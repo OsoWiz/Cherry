@@ -55,13 +55,15 @@ namespace GXBuffer
 	/// <returns>VkBuffer handle</returns>
 	VkBuffer createBuffer(VkDevice device, size_t size, VkBufferUsageFlags usageFlags);
 
+
+	// TODO nuke this function later or at least change the allocation to use a proper allocation handler.
 	/// <summary>
-	/// Creates a vertex buffer
+	/// Creates, allocates and binds a buffer
 	/// </summary>
 	/// <param name="device">handle</param>
 	/// <param name="size">of the alloc</param>
 	/// <returns>VkBuffer handle</returns>
-	VkBuffer createVertexBuffer(VkDevice device, size_t size);
+	void createAllocateBindBuffer(VkDevice device, VkPhysicalDevice gpu, VkBufferUsageFlags usage, VkMemoryPropertyFlags memProps, VkBuffer& buffer, VkDeviceMemory& mem, size_t size);
 
 	/// <summary>
 	/// Function for allocating gpu memory
@@ -77,7 +79,7 @@ namespace GXBuffer
 	///  Copies memory from host to the gpu
 	/// </summary>
 	/// <param name="allocator">logical device handle</param>
-	/// <param name="gpuMem">gpu memory handle</param>
+	/// <param name="gpuMem">gpu memory section handle</param>
 	/// <param name="memSize">copyable memory size</param>
 	/// <param name="vertices">vertex data</param>
 	void copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, std::vector<Vertex> vertices);
@@ -111,9 +113,9 @@ namespace GXBuffer
 
 	const std::vector<Vertex> triangleVertices = {
 		// Position				Color
-		{{0.0f, -0.5f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-		{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 0.0f}},
-		{{-0.5f, 0.5f, 0.0f}, {0.0f, 0.0f, 1.0f}}
+		{{0.0f, -0.5f, 0.0f}, {1.0f, 1.0f, 0.0f}},
+		{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 1.0f}},
+		{{-0.5f, 0.5f, 0.0f}, {1.0f, 0.0f, 1.0f}}
 	};
 
 }
