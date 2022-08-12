@@ -161,6 +161,8 @@ private:
     ///TEMPORARY
     VkBuffer vertexBuffer;
     VkDeviceMemory bufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indBufferMemory;
 
     const std::vector<const char*> validationlayers = {
         "VK_LAYER_KHRONOS_validation"

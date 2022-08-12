@@ -129,11 +129,11 @@ VkDeviceMemory GXBuffer::allocateBuffer(VkDevice allocator, VkPhysicalDevice gpu
 }
 
 
-void GXBuffer::copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, std::vector<Vertex> vertices)
+void GXBuffer::copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, const void* copySrc)
 {
 	void* data;
 	vkMapMemory(allocator, gpuMem, 0, memSize, 0, &data);
-	memcpy(data, vertices.data(), memSize);
+	memcpy(data, copySrc, memSize);
 	vkUnmapMemory(allocator, gpuMem);
 }
 

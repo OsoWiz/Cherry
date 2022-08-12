@@ -476,6 +476,11 @@ void GXSystem::createCommandPool()
 
 void GXSystem::createVertexBuffer() //TODO change to proper functionality
 { // currently uses staging buffer
+    
+    ///
+    // VERTEX BUFFER
+    ///
+
     size_t bufferSize = GXBuffer::triangleVertices.size() * sizeof(Vertex);
     
     VkBuffer stagBuffer;
@@ -483,7 +488,7 @@ void GXSystem::createVertexBuffer() //TODO change to proper functionality
     GXBuffer::createAllocateBindBuffer(logDevice, gpu, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagBuffer, stagBufferMem, bufferSize );
     
     // copies data to staging buffer.
-    GXBuffer::copyMemoryToGpu(logDevice, stagBufferMem, bufferSize, GXBuffer::triangleVertices);
+    GXBuffer::copyMemoryToGpu(logDevice, stagBufferMem, bufferSize, GXBuffer::triangleVertices.data());
 
     GXBuffer::createAllocateBindBuffer(logDevice, gpu, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, bufferMemory, bufferSize);
 
@@ -494,6 +499,30 @@ void GXSystem::createVertexBuffer() //TODO change to proper functionality
 
     // free staging buff.
     GXBuffer::freeAndDestroyBuffer(logDevice, stagBuffer, stagBufferMem);
+    
+    ///
+    // INDEX BUFFER
+    ///
+
+    size_t indBufferSize = GXBuffer::triangleIndices.size() * sizeof(uint16_t);
+
+    VkBuffer stagBuffer2;
+    VkDeviceMemory stagBufferMem2;
+    GXBuffer::createAllocateBindBuffer(logDevice, gpu, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagBuffer2, stagBufferMem2, indBufferSize);
+
+    // copies data to staging buffer.
+    GXBuffer::copyMemoryToGpu(logDevice, stagBufferMem2, indBufferSize, GXBuffer::triangleIndices.data());
+
+    GXBuffer::createAllocateBindBuffer(logDevice, gpu, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indBufferMemory, indBufferSize);
+
+    // copy to device
+    VkBufferCopy cpyReg2{};
+    cpyReg2.size = indBufferSize;
+    GXBuffer::copyBuffer(logDevice, stagBuffer2, indexBuffer, commandPool, graphicsQueue, cpyReg2);
+
+    // free staging buff rnd2.
+    GXBuffer::freeAndDestroyBuffer(logDevice, stagBuffer2, stagBufferMem2);
+
 }
 
 void GXSystem::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imIndex)
@@ -542,8 +571,9 @@ void GXSystem::recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imInd
     VkBuffer vertexBuffers[] = { vertexBuffer };
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets); 
+    vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
-    vkCmdDraw(commandBuffer, static_cast<uint32_t>(GXBuffer::triangleVertices.size()), 1, 0, 0);
+    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(GXBuffer::triangleIndices.size()), 1, 0, 0, 0);
 
     vkCmdEndRenderPass(commandBuffer);
 
@@ -701,6 +731,7 @@ void GXSystem::cleanup() {
     vkDestroyRenderPass(logDevice, renderPass, nullptr);
 
     GXBuffer::freeAndDestroyBuffer(logDevice, vertexBuffer, bufferMemory);
+    GXBuffer::freeAndDestroyBuffer(logDevice, indexBuffer, indBufferMemory);
 
     for (size_t i = 0; i < concurrentFrames; i++) {
         vkDestroySemaphore(logDevice, rendersFinished[i], nullptr);

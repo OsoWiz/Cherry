@@ -46,6 +46,16 @@ private:
 
 namespace GXBuffer
 {
+	// TODO should vertex data be incorporated to this?
+	/// <summary>
+	///  BufferObject is a container for the memory and
+	///  the buffer handle of a drawable graphics object
+	/// </summary>
+	struct BufferObject {
+		VkBuffer buffer;
+		VkDeviceMemory bufferMemory;
+	};
+
 	/// <summary>
 	/// Creates buffer for a given usage flag and size
 	/// </summary>
@@ -81,8 +91,8 @@ namespace GXBuffer
 	/// <param name="allocator">logical device handle</param>
 	/// <param name="gpuMem">gpu memory section handle</param>
 	/// <param name="memSize">copyable memory size</param>
-	/// <param name="vertices">vertex data</param>
-	void copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, std::vector<Vertex> vertices);
+	/// <param name="copuSrc">is the to be copied data</param>
+	void copyMemoryToGpu(VkDevice allocator, VkDeviceMemory gpuMem, size_t memSize, const void*);
 
 	/// <summary>
 	/// Copies source buffer to dst
@@ -102,13 +112,13 @@ namespace GXBuffer
 
 	// void createIndexBuffer(); Should be created when creating a buffer? maybe we should combine the two as they are used together anyway.
 
-	//Dummy data tetrahedron
+	// Dummy data tetrahedron
 	const std::vector<Vertex> tetrahedronVertices = {
 		// Position				Color
-		{{1.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
-		{{1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f}},
-		{{0.0f, 0.0f, 1.0f}, {0.0f, 0.0f, 1.0f}},
-		{{1.0f, 1.0f, 0.0f}, {0.8f, 0.7f, 0.0f}}
+		{{0.0f, 0.0f, 0.0f}, {1.0f, 0.0f, 0.0f}},
+		{{1.0f, 0.0f, 0.0f}, {0.0f, 1.0f, 0.0f}},
+		{{0.0f, 1.0f, 0.0f}, {0.0f, 0.0f, 1.0f}},
+		{{0.0f, 0.0f, 1.0f}, {0.8f, 0.7f, 0.0f}}
 	};
 
 	const std::vector<Vertex> triangleVertices = {
@@ -116,6 +126,17 @@ namespace GXBuffer
 		{{0.0f, -0.5f, 0.0f}, {1.0f, 1.0f, 0.0f}},
 		{{0.5f, 0.5f, 0.0f}, {0.0f, 1.0f, 1.0f}},
 		{{-0.5f, 0.5f, 0.0f}, {1.0f, 0.0f, 1.0f}}
+	};
+
+	const std::vector<uint16_t> triangleIndices = { 
+	0, 1, 2
+	};
+
+	const std::vector<uint16_t> tetrahedronIndices = {
+	0, 2, 1,
+	0, 1, 3,
+	1, 3, 2,
+	0, 3, 2
 	};
 
 }
